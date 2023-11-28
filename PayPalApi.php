@@ -90,7 +90,7 @@ class PayPalApi {
                 echo json_encode($result["jsonResponse"]);
             }
             
-            if ($this->sdkType == "API") return $result;
+            if ($this->sdkType == "API") return $result["jsonResponse"];
         } catch (Exception $error) {
             if ($this->sdkType == "JSON") {
                 echo json_encode(["error" => "Failed to create order."]);
@@ -109,7 +109,7 @@ class PayPalApi {
                 echo json_encode($result["jsonResponse"]);
             }
             
-            if ($this->sdkType == "API") return $result;
+            if ($this->sdkType == "API") return $result["jsonResponse"];
         } catch (Exception $error) {
             if ($this->sdkType == "JSON") {
                 echo json_encode(["error" => "Failed to create order."]);
