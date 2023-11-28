@@ -1,6 +1,8 @@
 <?php
 // Copyright (©) 2023 RAMPAGE Interactive
 // PayPal API SDK, based on PayPal JS Checkout SDK server.js
+namespace RAMPAGELLC\PayPal;
+use \Exception;
 
 class PayPalApi {
     private $base = "https://api-m.sandbox.paypal.com";
@@ -30,7 +32,7 @@ class PayPalApi {
         return $data["access_token"];
     }
 
-    private function createOrder($cart) {
+    private function createOrder(array $cart) {
         $payload = [
             "intent" => "CAPTURE",
             "purchase_units" => [
@@ -55,8 +57,8 @@ class PayPalApi {
         return $this->handleResponse($response);
     }
 
-    private function captureOrder($orderID) {
-        $response = $this->fetch("{$this->base}/v2/checkout/orders/{$orderID}/capture", [
+    private function captureOrder(string $orderID) {
+        $response = $this->fetch("{$this->base}/v2/checkout/orders/$orderID/capture", [
             "method" => "POST",
             "headers" => [
                 "Content-Type" => "application/json",
@@ -67,11 +69,10 @@ class PayPalApi {
         return $this->handleResponse($response);
     }
 
-    private function handleResponse($response) {
+    private function handleResponse(mixed $response) {
         try {
-            $jsonResponse = json_decode($response, true);
             return [
-                "jsonResponse" => $jsonResponse,
+                "jsonResponse" => json_decode($response, true),
                 "httpStatusCode" => http_response_code(),
             ];
         } catch (Exception $err) {
@@ -80,7 +81,7 @@ class PayPalApi {
         }
     }
 
-    public function processOrder($cart) {
+    public function processOrder(array $cart) {
         try {
             if (empty($cart) || empty($cart["id"]) || empty($cart["price"])) throw new Exception("Failed to create order.");
             $result = $this->createOrder($cart);
@@ -88,38 +89,42 @@ class PayPalApi {
             if ($this->sdkType == "JSON") {
                 http_response_code($result["httpStatusCode"]);
                 echo json_encode($result["jsonResponse"]);
+                return true;
             }
             
             if ($this->sdkType == "API") return $result["jsonResponse"];
         } catch (Exception $error) {
             if ($this->sdkType == "JSON") {
                 echo json_encode(["error" => "Failed to create order."]);
+                return false;
             }
             
             if ($this->sdkType == "API") return false;
         }
     }
 
-    public function captureOrderById($orderID) {
+    public function captureOrderById(string $orderID) {
         try {
             $result = $this->captureOrder($orderID);
             
             if ($this->sdkType == "JSON") {
                 http_response_code($result["httpStatusCode"]);
                 echo json_encode($result["jsonResponse"]);
+                return true;
             }
             
             if ($this->sdkType == "API") return $result["jsonResponse"];
         } catch (Exception $error) {
             if ($this->sdkType == "JSON") {
                 echo json_encode(["error" => "Failed to create order."]);
+                return false;
             }
             
             if ($this->sdkType == "API") return false;
         }
     }
 
-    private function fetch($url, $options) {
+    private function fetch(string $url, array $options) {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $options["method"]);
