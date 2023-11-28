@@ -6,10 +6,12 @@ class PayPalApi {
     private $base = "https://api-m.sandbox.paypal.com";
     private $paypalClientId;
     private $paypalClientSecret;
+    private $sdkType;
 
-    public function __construct(string $PAYPAL_CLIENT_ID, string $PAYPAL_CLIENT_SECRET) {
+    public function __construct(string $PAYPAL_CLIENT_ID, string $PAYPAL_CLIENT_SECRET, string $SDK_TYPE) {
         $this->paypalClientId = $PAYPAL_CLIENT_ID;
         $this->paypalClientSecret = $PAYPAL_CLIENT_SECRET;
+        $this->sdkType = $SDK_TYPE;
     }
 
     private function generateAccessToken() {
@@ -83,20 +85,37 @@ class PayPalApi {
             if (empty($cart) || empty($cart["id"]) || empty($cart["price"])) throw new Exception("Failed to create order.");
             $result = $this->createOrder($cart);
             
-            http_response_code($result["httpStatusCode"]);
-            echo json_encode($result["jsonResponse"]);
+            if ($this->sdkType == "JSON") {
+                http_response_code($result["httpStatusCode"]);
+                echo json_encode($result["jsonResponse"]);
+            }
+            
+            if ($this->sdkType == "API") return $result;
         } catch (Exception $error) {
-            echo json_encode(["error" => "Failed to create order."]);
+            if ($this->sdkType == "JSON") {
+                echo json_encode(["error" => "Failed to create order."]);
+            }
+            
+            if ($this->sdkType == "API") return false;
         }
     }
 
     public function captureOrderById($orderID) {
         try {
             $result = $this->captureOrder($orderID);
-            http_response_code($result["httpStatusCode"]);
-            echo json_encode($result["jsonResponse"]);
+            
+            if ($this->sdkType == "JSON") {
+                http_response_code($result["httpStatusCode"]);
+                echo json_encode($result["jsonResponse"]);
+            }
+            
+            if ($this->sdkType == "API") return $result;
         } catch (Exception $error) {
-            echo json_encode(["error" => "Failed to capture order."]);
+            if ($this->sdkType == "JSON") {
+                echo json_encode(["error" => "Failed to create order."]);
+            }
+            
+            if ($this->sdkType == "API") return false;
         }
     }
 
